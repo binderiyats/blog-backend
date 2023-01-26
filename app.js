@@ -3,15 +3,18 @@ const express = require("express");
 
 const app = express();
 const cors = require("cors");
-
+const bodyParser = require("body-parser");
+const jsonParser = bodyParser.json();
 const port = 8000;
-const categories = [
-  { id: 1, name: "Технологи" },
-  { id: 2, name: "Цаг үе" },
-  { id: 3, name: "Түүх" },
-  { id: 4, name: "Соёл" },
-  { id: 5, name: "Спорт" },
+let categories = [
+  { id: 1, name: "Технологи", description: "Технологи" },
+  { id: 2, name: "Цаг үе", description: "Цаг үе" },
+  { id: 3, name: "Түүх", description: "Түүх" },
+  { id: 4, name: "Соёл", description: "Соёл" },
+  { id: 5, name: "Спорт", description: "Спорт" },
 ];
+
+let nextCatId = categories.length;
 
 const articles = [
   {
@@ -95,6 +98,48 @@ app.get("/categories/:id", (request, response) => {
     }
   });
   response.json(filtered);
+});
+
+app.get("/categoriesArticle/:id", (request, response) => {
+  const { id } = request.params;
+  let category = null;
+  for (const row of categories) {
+    if (id == row.id) {
+      category = row;
+      break;
+    }
+  }
+
+  response.json(category);
+});
+
+app.delete("/categoriesArticle/:id", (request, response) => {
+  const { id } = request.params;
+  categories = categories.filter((row) => row.id !== Number(id));
+  response.json(id);
+});
+
+app.post("/categoriesArticle", jsonParser, (request, response) => {
+  const { name } = request.body;
+  const { description } = request.body;
+  const newCategory = { id: nextCatId++, name, description };
+  categories.push(newCategory);
+  response.send(newCategory);
+});
+
+app.patch("/categoriesArticle/:id", jsonParser, (request, response) => {
+  let { id } = request.params;
+  id = Number(id);
+  const { name, description } = request.body;
+  categories = categories.map((category) => {
+    if (category.id === id) {
+      return { id, name, description };
+    }
+
+    return category;
+  });
+
+  response.json({ id, name, description });
 });
 
 app.listen(port, () => {
