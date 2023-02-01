@@ -1,18 +1,16 @@
-const { request, response } = require("express");
 const express = require("express");
 
 const app = express();
 const cors = require("cors");
+const fs = require("fs");
 const bodyParser = require("body-parser");
 const jsonParser = bodyParser.json();
 const port = 8000;
-let categories = [
-  { id: 1, name: "Технологи", description: "Технологи" },
-  { id: 2, name: "Цаг үе", description: "Цаг үе" },
-  { id: 3, name: "Түүх", description: "Түүх" },
-  { id: 4, name: "Соёл", description: "Соёл" },
-  { id: 5, name: "Спорт", description: "Спорт" },
-];
+let categories = JSON.parse(fs.readFileSync("categoryData.json", "utf-8"));
+
+const updateCategoriesFile = () => {
+  fs.writeFileSync("categoryData.json", JSON.stringify(categories));
+};
 
 let nextCatId = categories.length;
 
@@ -70,13 +68,7 @@ app.get("/", (request, response) => {
   response.json("Hello");
 });
 
-app.get("/a", (request, response) => {
-  response.status(200);
-  response.json("dineg");
-});
-
 app.get("/categories", (request, response) => {
-  response.status(200);
   response.json(categories);
 });
 
@@ -116,6 +108,7 @@ app.get("/categoriesArticle/:id", (request, response) => {
 app.delete("/categoriesArticle/:id", (request, response) => {
   const { id } = request.params;
   categories = categories.filter((row) => row.id !== Number(id));
+  updateCategoriesFile();
   response.json(id);
 });
 
@@ -123,6 +116,7 @@ app.post("/categoriesArticle", jsonParser, (request, response) => {
   const { name } = request.body;
   const { description } = request.body;
   const newCategory = { id: nextCatId++, name, description };
+  updateCategoriesFile();
   categories.push(newCategory);
   response.send(newCategory);
 });
@@ -138,8 +132,72 @@ app.patch("/categoriesArticle/:id", jsonParser, (request, response) => {
 
     return category;
   });
-
+  updateCategoriesFile();
   response.json({ id, name, description });
+});
+
+// app.get("/generateNumbers", (req, res) => {
+//   let request = "";
+//   for (let i = 0; i < 1000; i++) {
+//     let n = "";
+//     if (i < 1000) {
+//       n += "0";
+//     }
+//     if (i < 100) {
+//       n += "0";
+//     }
+//     if (i < 10) {
+//       n += "0";
+//     }
+//     n += i;
+//     result += `9911${n}\n`;
+//   }
+//   fs.writeFileSync("phones.txt", result);
+//   res.json("Done");
+// });
+
+let products = JSON.parse(fs.readFileSync("productsData.json", "utf-8"));
+app.get("/products", (req, res) => {
+  let { pageSize, page, priceTo, priceFrom, q } = req.query;
+  pageSize = Number(pageSize) || 10;
+  page = Number(page) || 1;
+  priceTo = Number(priceTo);
+  priceFrom = Number(priceFrom);
+
+  let items = [...products];
+
+  if (q) {
+    items = items.filter((item) => {
+      if (item.name.toLowerCase().includes(q.toLowerCase())) {
+        return item;
+      }
+    });
+  }
+  if (priceTo && priceFrom) {
+    items = items.filter((item) => {
+      if (item.price >= priceFrom && item.price <= priceTo) {
+        return item;
+      }
+    });
+  }
+
+  let start, end;
+  start = (page - 1) * pageSize;
+  end = page * pageSize;
+
+  const total = items.length;
+  const totalPages = Math.ceil(items.length / pageSize);
+
+  items = items.slice(start, end);
+
+  const result = {
+    total,
+    totalPages,
+    page,
+    pageSize,
+    items: items,
+  };
+  res.json(result);
 });
 
 app.listen(port, () => {
