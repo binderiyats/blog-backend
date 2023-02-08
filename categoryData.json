@@ -1,6 +1,1 @@
-[
-  { "id": 1, "name": "Технологи", "description": "Технологи" },
-  { "id": 2, "name": "Цаг үе", "description": "Цаг үе" },
-  { "id": 3, "name": "Түүх", "description": "Түүх" },
-  { "id": 4, "name": "Соёл", "description": "Соёл" }
-]
+[{"id":1,"name":"Технологи","description":"Технологи"},{"id":2,"name":"Цаг үе","description":"Цаг үе"},{"id":3,"name":"Түүх","description":"Түүх"},{"id":4,"name":"Соёл","description":"Соёл"}]

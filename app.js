@@ -67,32 +67,14 @@ app.get("/", (request, response) => {
   response.status(200);
   response.json("Hello");
 });
-
+// CATEGORIES
+// Get all categories
 app.get("/categories", (request, response) => {
   response.json(categories);
 });
 
-app.get("/articles", (request, response) => {
-  response.status(200);
-  response.json(articles);
-});
-
-app.get("/articles/:id", (request, response) => {
-  const { id } = request.params;
-  response.json(articles[Number(id) - 1]);
-});
-
+// Get single category by id
 app.get("/categories/:id", (request, response) => {
-  const { id } = request.params;
-  const filtered = articles.filter((article) => {
-    if (article.categoryId === Number(id)) {
-      return article;
-    }
-  });
-  response.json(filtered);
-});
-
-app.get("/categoriesArticle/:id", (request, response) => {
   const { id } = request.params;
   let category = null;
   for (const row of categories) {
@@ -105,14 +87,16 @@ app.get("/categoriesArticle/:id", (request, response) => {
   response.json(category);
 });
 
-app.delete("/categoriesArticle/:id", (request, response) => {
+// Delete single category by id
+app.delete("/categories/:id", (request, response) => {
   const { id } = request.params;
   categories = categories.filter((row) => row.id !== Number(id));
   updateCategoriesFile();
   response.json(id);
 });
 
-app.post("/categoriesArticle", jsonParser, (request, response) => {
+// Create new category
+app.post("/categories", jsonParser, (request, response) => {
   const { name } = request.body;
   const { description } = request.body;
   const newCategory = { id: nextCatId++, name, description };
@@ -121,7 +105,8 @@ app.post("/categoriesArticle", jsonParser, (request, response) => {
   response.send(newCategory);
 });
 
-app.patch("/categoriesArticle/:id", jsonParser, (request, response) => {
+// Update single category by id
+app.patch("/categories/:id", jsonParser, (request, response) => {
   let { id } = request.params;
   id = Number(id);
   const { name, description } = request.body;
@@ -136,25 +121,30 @@ app.patch("/categoriesArticle/:id", jsonParser, (request, response) => {
   response.json({ id, name, description });
 });
 
-// app.get("/generateNumbers", (req, res) => {
-//   let request = "";
-//   for (let i = 0; i < 1000; i++) {
-//     let n = "";
-//     if (i < 1000) {
-//       n += "0";
-//     }
-//     if (i < 100) {
-//       n += "0";
-//     }
-//     if (i < 10) {
-//       n += "0";
-//     }
-//     n += i;
-//     result += `9911${n}\n`;
-//   }
-//   fs.writeFileSync("phones.txt", result);
-//   res.json("Done");
-// });
+// ARTICLES
+
+// Get all articles
+app.get("/articles", (request, response) => {
+  response.status(200);
+  response.json(articles);
+});
+
+// Get single article by id
+app.get("/articles/:id", (request, response) => {
+  const { id } = request.params;
+  response.json(articles[Number(id) - 1]);
+});
+
+// Get filtered articles by category id
+app.get("/articles/category/:id", (request, response) => {
+  const { id } = request.params;
+  const filtered = articles.filter((article) => {
+    if (article.categoryId === Number(id)) {
+      return article;
+    }
+  });
+  response.json(filtered);
+});
 
 //PRODUCTS!!!
 let products = JSON.parse(fs.readFileSync("productsData.json", "utf-8"));
