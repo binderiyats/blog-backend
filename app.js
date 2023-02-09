@@ -4,64 +4,24 @@ const app = express();
 const cors = require("cors");
 const fs = require("fs");
 const bodyParser = require("body-parser");
+const { request } = require("http");
+const { response } = require("express");
 const jsonParser = bodyParser.json();
 const port = 8000;
+app.use(cors());
 let categories = JSON.parse(fs.readFileSync("categoryData.json", "utf-8"));
+let articles = JSON.parse(fs.readFileSync("articleData.json", "utf-8"));
 
 const updateCategoriesFile = () => {
   fs.writeFileSync("categoryData.json", JSON.stringify(categories));
 };
 
-let nextCatId = categories.length;
+const updateArticlesFile = () => {
+  fs.writeFileSync("articleData.json", JSON.stringify(articles));
+};
 
-const articles = [
-  {
-    id: 1,
-    categoryId: 1,
-    imageUrl:
-      "https://ichef.bbci.co.uk/news/976/cpsprodpb/F351/production/_128398226_2aa649c9-3983-4c82-a0f5-efe5d9c99eb3.jpg.webp",
-    name: "Signs used by apes understood by humans",
-    description:
-      "Humans understand the 'signs' or gestures wild chimps and bonobos use to communicate with one another",
-    text: `That is the conclusion of a video-based study in which volunteers translated ape gestures. It was carried out by researchers at St Andrews University.
-
-    It suggests that the last common ancestor we shared with chimps used similar gestures, and that these were a "starting point" for our language.
-    
-    The findings are published in the scientific journal PLOS Biology.
-    
-    Lead researcher, Dr Kirsty Graham from St Andrews University explained: "We know that all the great apes - chimps and bonobos - have an overlap of about 95% of the gestures they use to communicate.
-    
-    "So we already had a suspicion that this was a shared gesturing ability that might have been present in our last shared ancestor. But we're quite confident now that our ancestors would have started off gesturing, and that this was co-opted into language."
-    
-    This study was part of an ongoing scientific mission to understand this language origin story by carefully studying communication in our closest ape cousins.
-    
-    `,
-  },
-  {
-    id: 2,
-    categoryId: 5,
-    imageUrl:
-      "https://ichef.bbci.co.uk/onesport/cps/976/cpsprodpb/7184/production/_128406092_gettyimages-1246514605.jpg",
-    name: "Australian Open 2023 results: Magda Linette to face Aryna Sabalenka in semi-finals",
-    description:
-      "Magda Linette will meet fifth seed Aryna Sabalenka in the Australian Open semi-finals after she beat Karolina Pliskova to continue her dream run.",
-    text: `That is the conclusion of a video-based study in which volunteers translated ape gestures. It was carried out by researchers at St Andrews University.
-
-    It suggests that the last common ancestor we shared with chimps used similar gestures, and that these were a "starting point" for our language.
-    
-    The findings are published in the scientific journal PLOS Biology.
-    
-    Lead researcher, Dr Kirsty Graham from St Andrews University explained: "We know that all the great apes - chimps and bonobos - have an overlap of about 95% of the gestures they use to communicate.
-    
-    "So we already had a suspicion that this was a shared gesturing ability that might have been present in our last shared ancestor. But we're quite confident now that our ancestors would have started off gesturing, and that this was co-opted into language."
-    
-    This study was part of an ongoing scientific mission to understand this language origin story by carefully studying communication in our closest ape cousins.
-    
-    `,
-  },
-];
-
-app.use(cors());
+let nextCatId = categories.length + 1;
+let nextArtId = articles.length + 1;
 
 app.get("/", (request, response) => {
   response.status(200);
@@ -100,8 +60,8 @@ app.post("/categories", jsonParser, (request, response) => {
   const { name } = request.body;
   const { description } = request.body;
   const newCategory = { id: nextCatId++, name, description };
-  updateCategoriesFile();
   categories.push(newCategory);
+  updateCategoriesFile();
   response.send(newCategory);
 });
 
@@ -121,7 +81,7 @@ app.patch("/categories/:id", jsonParser, (request, response) => {
   response.json({ id, name, description });
 });
 
-// ARTICLES
+// !!!ARTICLES!!!
 
 // Get all articles
 app.get("/articles", (request, response) => {
@@ -133,6 +93,37 @@ app.get("/articles", (request, response) => {
 app.get("/articles/:id", (request, response) => {
   const { id } = request.params;
   response.json(articles[Number(id) - 1]);
+});
+
+//Create a new article
+app.post("/articles", jsonParser, (request, response) => {
+  const { name } = request.body;
+  const { description } = request.body;
+  const { imageUrl } = request.body;
+  const newArticle = { id: nextArtId++, name, description, imageUrl };
+  articles.push(newArticle);
+  updateArticlesFile();
+  response.send(newArticle);
+});
+
+//Update single article by its id
+app.patch("articles/:id", jsonParser, (request, response) => {
+  let { id } = request.params;
+  id = Number(id);
+  const { name, description, imageUrl } = request.body;
+  articles = articles.map((article) => {
+    if (article.id === id) {
+      return { id, name, description, imageUrl };
+    }
+  });
+});
+//Delete an article by id
+
+app.delete("/articles/:id", (request, response) => {
+  const { id } = request.params;
+  articles = articles.filter((row) => row.id !== Number(id));
+  updateArticlesFile();
+  response.json(id);
 });
 
 // Get filtered articles by category id
