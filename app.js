@@ -59,7 +59,11 @@ app.delete("/categories/:id", (request, response) => {
 app.post("/categories", jsonParser, (request, response) => {
   const { name } = request.body;
   const { description } = request.body;
-  const newCategory = { id: nextCatId++, name, description };
+  const newCategory = {
+    id: categories[categories.length - 1].id + 1,
+    name,
+    description,
+  };
   categories.push(newCategory);
   updateCategoriesFile();
   response.send(newCategory);
